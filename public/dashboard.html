@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="page">
+    <div class="nav-links">
+  <a href="/index.html#about">About</a>
+  <a href="/index.html#projects">Projects</a>
+  <a href="/index.html#experience">Experience</a>
+  <a href="/index.html#contact">Contact</a>
+  <a href="/dashboard.html">Dashboard</a>
+  <a href="#" class="btn btn-secondary">Download CV</a>
+</div>
+    <div class="topbar">
+      <h1>User Dashboard</h1>
+      <button style="width: 100px;"id="logoutBtn">Logout</button>
+    </div>
+
+    <section class="card">
+      <h2>Send a Message</h2>
+      <form id="messageForm">
+        <input id="subject" type="text" placeholder="Subject" required />
+        <textarea id="messageText" placeholder="Write your message..." required></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>My Messages</h2>
+      <div id="messagesList"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/dashboard.js"></script>
+</body>
+</html>

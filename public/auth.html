@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auth</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="page auth-page" >
+          <div class="nav-links" style="margin-bottom: 25px;">
+  <a href="/index.html#about">About</a>
+  <a href="/index.html#projects">Projects</a>
+  <a href="/index.html#experience">Experience</a>
+  <a href="/index.html#contact">Contact</a>
+  <a href="/auth.html">Login</a>
+  <a href="/dashboard.html">Dashboard</a>
+  <a href="#" class="btn btn-secondary">Download CV</a>
+</div>
+    <div class="auth-grid">
+        
+      <section class="card">
+        <h2>Register</h2>
+        <form id="registerForm">
+          <input id="registerName" type="text" placeholder="Name" required />
+          <input id="registerEmail" type="email" placeholder="Email" required />
+          <input id="registerPassword" type="password" placeholder="Password" required />
+          <button type="submit">Register</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Login</h2>
+        <form id="loginForm">
+          <input id="loginEmail" type="email" placeholder="Email" required />
+          <input id="loginPassword" type="password" placeholder="Password" required />
+          <button type="submit">Login</button>
+        </form>
+
+        <button id="googleLoginBtn" class="secondary-btn" type="button">
+          Continue with Google
+        </button>
+      </section>
+    </div>
+
+    <p id="authMessage"></p>
+  </main>
+
+  <script type="module" src="/auth.js"></script>
+</body>
+</html>

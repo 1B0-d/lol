@@ -468,7 +468,132 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+* {
+  box-sizing: border-box;
+}
 
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0e1320;
+  color: #fff;
+}
+
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.auth-page {
+  max-width: 900px;
+}
+
+.auth-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.card {
+  background: #171d2e;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+input,
+textarea,
+button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+button {
+  cursor: pointer;
+  background: #6f8cff;
+  color: #fff;
+  font-weight: 700;
+}
+
+.secondary-btn {
+  margin-top: 16px;
+  background: #2a3148;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.message-card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 14px;
+}
+
+.reply-box {
+  margin-top: 12px;
+  padding: 12px;
+  background: #1d263c;
+  border-radius: 10px;
+}
+
+small {
+  display: block;
+  margin-top: 10px;
+  color: #b8c0e0;
+}
+
+body {
+  animation: fadeIn 0.35s ease;
+}
+.page-exit {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: 0.25s ease;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (max-width: 768px) {
+  .auth-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .topbar button {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100px;
+  }
+}
 .contact-right {
   display: grid;
   gap: 14px;
