@@ -68,3 +68,28 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 firebase/serviceAccountKey.json
+# Secrets
+serviceAccountKey.json
+*.pem
+*.key
+
+# Go
+bin/
+dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

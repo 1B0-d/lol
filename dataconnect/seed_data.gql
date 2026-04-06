@@ -1,0 +1,124 @@
+mutation SeedData @transaction @auth(level: USER, insecureReason: "Seed data operations are typically for development or specific admin tasks, and direct user access should be controlled or limited.") {
+  user_upsertMany(data: [
+    {
+      id: "71e2c943-2615-430c-99d7-83d47d4e3a8e",
+      displayName: "Jane Doe",
+      email: "jane.doe@example.com",
+      createdAt: "2023-01-01T10:00:00Z",
+      portfolioSlug: "jane-doe",
+      bio: "A passionate developer with expertise in web technologies.",
+      profilePictureUrl: "https://example.com/jane-profile.jpg",
+      linkedinUrl: "https://linkedin.com/in/janedoe",
+      githubUrl: "https://github.com/janedoe",
+      websiteUrl: "https://janedoe.dev",
+      theme: "dark"
+    },
+    {
+      id: "8c9b2f3a-4e5c-6d7b-8a9c-0d1e2f3a4b5c",
+      displayName: "John Smith",
+      email: "john.smith@example.com",
+      createdAt: "2023-02-15T11:30:00Z",
+      portfolioSlug: "john-smith",
+      bio: "An experienced software engineer specializing in mobile app development.",
+      profilePictureUrl: "https://example.com/john-profile.jpg",
+      linkedinUrl: "https://linkedin.com/in/johnsmith",
+      githubUrl: "https://github.com/johnsmith",
+      websiteUrl: "https://johnsmith.app",
+      theme: "light"
+    }
+  ])
+  education_upsertMany(data: [
+    {
+      id: "b2d3e4f5-6a7b-8c9d-0e1f-2a3b4c5d6e7f",
+      userId: "71e2c943-2615-430c-99d7-83d47d4e3a8e",
+      institution: "University of Technology",
+      degree: "Bachelor of Science",
+      major: "Computer Science",
+      startDate: "2018-09-01",
+      endDate: "2022-06-30"
+    },
+    {
+      id: "c3d4e5f6-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+      userId: "8c9b2f3a-4e5c-6d7b-8a9c-0d1e2f3a4b5c",
+      institution: "State University",
+      degree: "Master of Engineering",
+      major: "Software Engineering",
+      startDate: "2020-09-01",
+      endDate: "2022-09-01"
+    }
+  ])
+  experience_upsertMany(data: [
+    {
+      id: "d4e5f6a7-8b9c-0d1e-2f3a-4b5c6d7e8f9a",
+      userId: "71e2c943-2615-430c-99d7-83d47d4e3a8e",
+      jobTitle: "Software Developer",
+      company: "Tech Solutions Inc.",
+      location: "San Francisco, CA",
+      startDate: "2022-07-01",
+      description: "Developed and maintained web applications using React and Node.js."
+    },
+    {
+      id: "e5f6a7b8-9c0d-1e2f-3a4b-5c6d7e8f9a0b",
+      userId: "8c9b2f3a-4e5c-6d7b-8a9c-0d1e2f3a4b5c",
+      jobTitle: "Mobile Developer",
+      company: "Innovate Apps LLC",
+      location: "New York, NY",
+      startDate: "2022-10-01",
+      description: "Built native iOS and Android applications with Flutter."
+    }
+  ])
+  project_upsertMany(data: [
+    {
+      id: "f6a7b8c9-0d1e-2f3a-4b5c-6d7e8f9a0b1c",
+      userId: "71e2c943-2615-430c-99d7-83d47d4e3a8e",
+      title: "Portfolio Website",
+      description: "A personal portfolio website showcasing various projects and skills.",
+      createdAt: "2023-03-01T14:00:00Z",
+      liveDemoUrl: "https://janedoe.dev",
+      githubRepoUrl: "https://github.com/janedoe/portfolio",
+      imageUrl: "https://example.com/portfolio-screenshot.jpg",
+      tags: ["React", "Next.js", "Firebase"]
+    },
+    {
+      id: "0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d",
+      userId: "8c9b2f3a-4e5c-6d7b-8a9c-0d1e2f3a4b5c",
+      title: "Task Management App",
+      description: "A mobile application for managing daily tasks and to-do lists.",
+      createdAt: "2023-04-10T09:00:00Z",
+      liveDemoUrl: null,
+      githubRepoUrl: "https://github.com/johnsmith/task-app",
+      imageUrl: "https://example.com/task-app-screenshot.jpg",
+      tags: ["Flutter", "Dart", "Firebase"]
+    }
+  ])
+  skill_upsertMany(data: [
+    {
+      id: "1a2b3c4d-5e6f-7a8b-9c0d-e1f2a3b4c5d6",
+      userId: "71e2c943-2615-430c-99d7-83d47d4e3a8e",
+      name: "React",
+      category: "Frontend",
+      proficiencyLevel: "Advanced"
+    },
+    {
+      id: "2a3b4c5d-6e7f-8a9b-c0d1-e2f3a4b5c6d7",
+      userId: "71e2c943-2615-430c-99d7-83d47d4e3a8e",
+      name: "Node.js",
+      category: "Backend",
+      proficiencyLevel: "Intermediate"
+    },
+    {
+      id: "3a4b5c6d-7e8f-9a0b-c1d2-e3f4a5b6c7d8",
+      userId: "8c9b2f3a-4e5c-6d7b-8a9c-0d1e2f3a4b5c",
+      name: "Flutter",
+      category: "Mobile",
+      proficiencyLevel: "Advanced"
+    },
+    {
+      id: "4a5b6c7d-8e9f-0a1b-c2d3-e4f5a6b7c8d9",
+      userId: "8c9b2f3a-4e5c-6d7b-8a9c-0d1e2f3a4b5c",
+      name: "Firebase",
+      category: "Backend",
+      proficiencyLevel: "Intermediate"
+    }
+  ])
+}

@@ -63,6 +63,14 @@ type ReplyPayload struct {
 	Reply string `json:"reply"`
 }
 
+func noCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		next.ServeHTTP(w, r)
+	})
+}
 func main() {
 	ctx := context.Background()
 
@@ -100,13 +108,24 @@ func main() {
 	mux.HandleFunc("/api/admin/messages", a.adminMessagesHandler)
 	mux.HandleFunc("/api/admin/reply", a.adminReplyHandler)
 
-	fileServer := http.FileServer(http.Dir("public"))
+	mux.Handle("/auth.html", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/auth.html")
+	})))
+
+	mux.Handle("/dashboard.html", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/dashboard.html")
+	})))
+
+	mux.Handle("/admin.html", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/admin.html")
+	})))
+
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
+		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
 			http.ServeFile(w, r, "public/index.html")
 			return
 		}
-		fileServer.ServeHTTP(w, r)
+		http.FileServer(http.Dir("public")).ServeHTTP(w, r)
 	}))
 
 	server := &http.Server{
@@ -115,7 +134,9 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
 	}
-
+	mux.HandleFunc("/Resume.pdf", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./Resume.pdf")
+	})
 	fmt.Println("Server running at http://localhost:8080")
 	log.Fatal(server.ListenAndServe())
 }

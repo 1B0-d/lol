@@ -2,7 +2,7 @@ import { auth } from "/firebase-config.js";
 import {
   onAuthStateChanged,
   signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const adminMessagesList = document.getElementById("adminMessagesList");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -22,8 +22,8 @@ async function loadAdminMessages() {
     }
   });
 
-  if (res.status === 403) {
-    adminMessagesList.innerHTML = "<p>Access denied.</p>";
+  if (res.status === 401 || res.status === 403) {
+    window.location.replace("/auth.html");
     return;
   }
 
@@ -35,10 +35,8 @@ async function loadAdminMessages() {
       <p><strong>From:</strong> ${msg.userEmail}</p>
       <p><strong>Status:</strong> ${msg.status}</p>
       <p>${msg.text}</p>
-
       <textarea id="reply-${msg.id}" placeholder="Write reply...">${msg.reply || ""}</textarea>
       <button data-id="${msg.id}" class="reply-btn">Save Reply</button>
-
       <small>${formatDate(msg.createdAt)}</small>
     </div>
   `).join("");
@@ -64,12 +62,12 @@ async function loadAdminMessages() {
 
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
-  window.location.href = "/auth.html";
+  window.location.replace("/auth.html");
 });
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "/auth.html";
+    window.location.replace("/auth.html");
     return;
   }
 
@@ -82,10 +80,15 @@ onAuthStateChanged(auth, async (user) => {
     }
   });
 
+  if (meRes.status === 401) {
+    window.location.replace("/auth.html");
+    return;
+  }
+
   const me = await meRes.json();
 
   if (me.role !== "admin") {
-    window.location.href = "/dashboard.html";
+    window.location.replace("/dashboard.html");
     return;
   }
 

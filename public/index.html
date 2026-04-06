@@ -17,12 +17,18 @@
 
       <div class="nav-links">
   <a href="/index.html#about">About</a>
-  <a href="/index.html#projects">Projects</a>
+ 
   <a href="/index.html#experience">Experience</a>
   <a href="/index.html#contact">Contact</a>
-  <a href="/auth.html">Login</a>
+  <a href="/auth.html">Login(Try Demo)</a>
   <a href="/dashboard.html">Dashboard</a>
-  <a href="#" class="btn btn-secondary">Download CV</a>
+           <details class="nav-dropdown">
+    <summary>Language</summary>
+    <div class="nav-dropdown-menu">
+      <a href="/index_ru.html">РУ</a>
+    </div>
+  </details>
+  <a href="/Resume.pdf" download class="btn btn-secondary">Download CV</a>
 </div>
     </div>
   </nav>
@@ -157,76 +163,6 @@
       </div>
     </section>
 
-    <section id="projects">
-      <div class="container">
-        <div class="section-head reveal">
-          <div>
-            <h2>Featured Projects</h2>
-            <p>
-              Replace these cards with your strongest projects. Keep only the best ones.
-              Each project should show the stack, your role, and the result.
-            </p>
-          </div>
-        </div>
-
-        <div class="projects-grid">
-          <article class="card project-card reveal">
-            <div class="project-top">Project 01</div>
-            <h3>Student Course Registry</h3>
-            <p>
-              A web application for managing courses, students, and registration logic.
-              Built with a focus on structure, usability, and clean backend logic.
-            </p>
-            <div class="tags">
-              <span class="tag">Node.js</span>
-              <span class="tag">Express</span>
-              <span class="tag">SQLite</span>
-            </div>
-            <div class="project-links">
-              <a href="#">Live Demo</a>
-              <a href="#">GitHub</a>
-            </div>
-          </article>
-
-          <article class="card project-card reveal">
-            <div class="project-top">Project 02</div>
-            <h3>Hotel Management API</h3>
-            <p>
-              Backend API for hotel booking and room management. Designed around clear
-              endpoints, consistent data handling, and practical real-world logic.
-            </p>
-            <div class="tags">
-              <span class="tag">Go</span>
-              <span class="tag">REST API</span>
-              <span class="tag">JSON</span>
-            </div>
-            <div class="project-links">
-              <a href="#">Documentation</a>
-              <a href="#">GitHub</a>
-            </div>
-          </article>
-
-          <article class="card project-card reveal">
-            <div class="project-top">Project 03</div>
-            <h3>Blockchain Voting dApp</h3>
-            <p>
-              A smart contract based voting application demonstrating Solidity basics,
-              frontend interaction, and blockchain-oriented system thinking.
-            </p>
-            <div class="tags">
-              <span class="tag">Solidity</span>
-              <span class="tag">Hardhat</span>
-              <span class="tag">JavaScript</span>
-            </div>
-            <div class="project-links">
-              <a href="#">Demo</a>
-              <a href="#">GitHub</a>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
     <section id="experience">
       <div class="container">
         <div class="section-head reveal">
@@ -308,7 +244,7 @@
       <p style="color: var(--muted); margin-bottom: 14px;">
         Add a PDF button here so your portfolio website and classic CV work together.
       </p>
-      <a href="#" class="btn btn-primary" style="width: 100%;">Download CV</a>
+      <a href="/Resume.pdf" download class="btn btn-primary" style="width: 100%;">Download CV</a>
     </div>
   </div>
 </div>

@@ -2,7 +2,7 @@ import { auth } from "/firebase-config.js";
 import {
   onAuthStateChanged,
   signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const logoutBtn = document.getElementById("logoutBtn");
 const messageForm = document.getElementById("messageForm");
@@ -41,7 +41,7 @@ async function loadMessages() {
   });
 
   if (res.status === 401) {
-    window.location.href = "/auth.html";
+    window.location.replace("/auth.html");
     return;
   }
 
@@ -72,12 +72,12 @@ messageForm.addEventListener("submit", async (e) => {
 
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
-  window.location.href = "/auth.html";
+  window.location.replace("/auth.html");
 });
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "/auth.html";
+    window.location.replace("/auth.html");
     return;
   }
 
@@ -90,10 +90,15 @@ onAuthStateChanged(auth, async (user) => {
     }
   });
 
+  if (meRes.status === 401) {
+    window.location.replace("/auth.html");
+    return;
+  }
+
   const me = await meRes.json();
 
   if (me.role === "admin") {
-    window.location.href = "/admin.html";
+    window.location.replace("/admin.html");
     return;
   }
 

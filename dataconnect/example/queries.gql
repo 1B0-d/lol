@@ -1,0 +1,55 @@
+query ListAllProjects @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public as it lists public project information.") {
+  projects {
+    id
+    title
+    description
+    liveDemoUrl
+    githubRepoUrl
+    imageUrl
+    tags
+    user {
+      displayName
+      portfolioSlug
+    }
+  }
+}
+
+query GetMyProfile @auth(level: USER) {
+  user(key: {id_expr: "auth.uid"}) {
+    id
+    displayName
+    email
+    portfolioSlug
+    bio
+    profilePictureUrl
+    linkedinUrl
+    githubUrl
+    websiteUrl
+    theme
+  }
+}
+
+mutation CreateNewProject($title: String!, $description: String!, $liveDemoUrl: String, $githubRepoUrl: String, $imageUrl: String, $tags: [String!]) @auth(level: USER) {
+  project_insert(data: {
+    userId_expr: "auth.uid",
+    title: $title,
+    description: $description,
+    createdAt_expr: "request.time",
+    liveDemoUrl: $liveDemoUrl,
+    githubRepoUrl: $githubRepoUrl,
+    imageUrl: $imageUrl,
+    tags: $tags
+  }) {
+    id
+  }
+}
+
+mutation UpdateMySkill($id: UUID!, $name: String, $category: String, $proficiencyLevel: String) @auth(level: USER) {
+  skill_update(key: {id: $id}, data: {
+    name: $name,
+    category: $category,
+    proficiencyLevel: $proficiencyLevel
+  }) {
+    id
+  }
+}
