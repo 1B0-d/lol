@@ -74,16 +74,14 @@ func noCache(next http.Handler) http.Handler {
 func main() {
 	ctx := context.Background()
 
-	creds := os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
-	opt := option.WithCredentialsJSON([]byte(creds))
-
+	opt := option.WithCredentialsFile("/etc/secrets/serviceAccountKey.json")
 	conf := &firebase.Config{
 		ProjectID: os.Getenv("FIREBASE_PROJECT_ID"),
 	}
 
 	app, err := firebase.NewApp(ctx, conf, opt)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("firebase.NewApp error: %v", err)
 	}
 
 	authClient, err := app.Auth(ctx)
