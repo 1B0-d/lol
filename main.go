@@ -74,7 +74,9 @@ func noCache(next http.Handler) http.Handler {
 func main() {
 	ctx := context.Background()
 
-	opt := option.WithCredentialsFile("firebase/serviceAccountKey.json")
+	creds := os.Getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+	opt := option.WithCredentialsJSON([]byte(creds))
+
 	conf := &firebase.Config{
 		ProjectID: os.Getenv("FIREBASE_PROJECT_ID"),
 	}
@@ -128,8 +130,13 @@ func main() {
 		http.FileServer(http.Dir("public")).ServeHTTP(w, r)
 	}))
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	server := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":" + port,
 		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
@@ -137,7 +144,7 @@ func main() {
 	mux.HandleFunc("/Resume.pdf", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./Resume.pdf")
 	})
-	fmt.Println("Server running at http://localhost:8080")
+	fmt.Printf("Server running at http://localhost:8080 or Server running on port %s\n", port)
 	log.Fatal(server.ListenAndServe())
 }
 
