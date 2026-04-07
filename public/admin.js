@@ -23,7 +23,7 @@ async function loadAdminMessages() {
   });
 
   if (res.status === 401 || res.status === 403) {
-    window.location.replace("/auth.html");
+    window.location.replace("/auth");
     return;
   }
 
@@ -62,12 +62,12 @@ async function loadAdminMessages() {
 
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
-  window.location.replace("/auth.html");
+  window.location.replace("/auth");
 });
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.replace("/auth.html");
+    window.location.replace("/auth");
     return;
   }
 
@@ -81,14 +81,14 @@ onAuthStateChanged(auth, async (user) => {
   });
 
   if (meRes.status === 401) {
-    window.location.replace("/auth.html");
+    window.location.replace("/auth");
     return;
   }
 
   const me = await meRes.json();
 
   if (me.role !== "admin") {
-    window.location.replace("/dashboard.html");
+    window.location.replace("/dashboard");
     return;
   }
 

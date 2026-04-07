@@ -73,8 +73,13 @@ func noCache(next http.Handler) http.Handler {
 }
 func main() {
 	ctx := context.Background()
-
-	opt := option.WithCredentialsFile("/etc/secrets/serviceAccountKey.json")
+	renderPath := "/etc/secrets/serviceAccountKey.json"
+	defPath := "firebase/serviceAccountKey.json"
+	Path := renderPath
+	if _, err := os.Stat(renderPath); os.IsNotExist(err) {
+		Path = defPath
+	}
+	opt := option.WithCredentialsFile(Path)
 	conf := &firebase.Config{
 		ProjectID: os.Getenv("FIREBASE_PROJECT_ID"),
 	}
@@ -108,15 +113,23 @@ func main() {
 	mux.HandleFunc("/api/admin/messages", a.adminMessagesHandler)
 	mux.HandleFunc("/api/admin/reply", a.adminReplyHandler)
 
-	mux.Handle("/auth.html", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/auth", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/auth.html")
 	})))
 
-	mux.Handle("/dashboard.html", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/auth/ru", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/auth_ru.html")
+	})))
+
+	mux.Handle("/dashboard", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/dashboard.html")
 	})))
 
-	mux.Handle("/admin.html", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/dashboard/ru", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "public/dashboard_ru.html")
+	})))
+
+	mux.Handle("/admin", noCache(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "public/admin.html")
 	})))
 
@@ -128,6 +141,13 @@ func main() {
 		http.FileServer(http.Dir("public")).ServeHTTP(w, r)
 	}))
 
+	mux.Handle("/ru", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ru" || r.URL.Path == "/index_ru.html" {
+			http.ServeFile(w, r, "public/index_ru.html")
+			return
+		}
+		http.FileServer(http.Dir("public")).ServeHTTP(w, r)
+	}))
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"

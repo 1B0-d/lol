@@ -41,7 +41,8 @@ async function loadMessages() {
   });
 
   if (res.status === 401) {
-    window.location.replace("/auth.html");
+    const authPath = window.location.pathname.includes('/ru') ? '/auth/ru' : '/auth';
+    window.location.replace(authPath);
     return;
   }
 
@@ -71,13 +72,15 @@ messageForm.addEventListener("submit", async (e) => {
 });
 
 logoutBtn.addEventListener("click", async () => {
+      const authPath = window.location.pathname.includes('/ru') ? '/auth/ru' : '/auth';
   await signOut(auth);
-  window.location.replace("/auth.html");
+  window.location.replace(authPath);
 });
 
 onAuthStateChanged(auth, async (user) => {
+  const authPath = window.location.pathname.includes('/ru') ? '/auth/ru' : '/auth';
   if (!user) {
-    window.location.replace("/auth.html");
+    window.location.replace(authPath);
     return;
   }
 
@@ -91,7 +94,8 @@ onAuthStateChanged(auth, async (user) => {
   });
 
   if (meRes.status === 401) {
-    window.location.replace("/auth.html");
+    const authPath = window.location.pathname.includes('/ru') ? '/auth/ru' : '/auth';
+    window.location.replace(authPath);
     return;
   }
 

@@ -2,7 +2,8 @@ import { auth, googleProvider } from "/firebase-config.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup
+  signInWithPopup,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const registerForm = document.getElementById("registerForm");
@@ -12,6 +13,28 @@ const loginForm_ru = document.getElementById("loginForm_ru");
 const googleLoginBtn = document.getElementById("googleLoginBtn");
 const googleLoginBtn_ru = document.getElementById("googleLoginBtn_ru");
 const authMessage = document.getElementById("authMessage");
+
+// Redirect to dashboard if user is already logged in
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    const token = await user.getIdToken();
+    const meRes = await fetch("/api/me", {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (meRes.ok) {
+      const me = await meRes.json();
+      if (me.role === "admin") {
+        window.location.replace("/admin");
+        return;
+      }
+      const isDashboardRu = window.location.pathname.includes('/ru');
+      window.location.replace(isDashboardRu ? "/dashboard/ru" : "/dashboard");
+    }
+  }
+});
 
 async function redirectAfterAuth(user, name = "", lang) {
   const token = await user.getIdToken();
@@ -38,11 +61,11 @@ async function redirectAfterAuth(user, name = "", lang) {
     return;
   }
   if (lang ==="ru"){
-  window.location.href = "/dashboard_ru.html";
+  window.location.href = "/dashboard/ru";
   return;
 
 }
-  window.location.href = "/dashboard.html";
+  window.location.href = "/dashboard";
 }
 
 
