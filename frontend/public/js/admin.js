@@ -1,4 +1,9 @@
 import { auth, authReady } from "/js/firebase-config.js?v=2";
+import {
+  ensureOk,
+  fetchWithRetry,
+  getFriendlyErrorMessage
+} from "/js/api-client.js?v=1";
 import { apiUrl } from "/js/site-config.js?v=1";
 import {
   onAuthStateChanged,
@@ -6,10 +11,36 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const adminMessagesList = document.getElementById("adminMessagesList");
+const adminStatus = document.getElementById("adminStatus");
 const logoutBtn = document.getElementById("logoutBtn");
 const logoutRedirectKey = "logout_redirect_pending";
 
 let currentUser = null;
+let adminStatusTimeout = null;
+
+function setAdminStatus(message) {
+  if (adminStatusTimeout) {
+    clearTimeout(adminStatusTimeout);
+    adminStatusTimeout = null;
+  }
+
+  adminStatus.textContent = message;
+}
+
+function clearAdminStatusLater(delayMs = 1500) {
+  if (adminStatusTimeout) {
+    clearTimeout(adminStatusTimeout);
+  }
+
+  adminStatusTimeout = setTimeout(() => {
+    adminStatus.textContent = "";
+    adminStatusTimeout = null;
+  }, delayMs);
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function resolveAuthenticatedUser() {
   await authReady;
@@ -34,12 +65,16 @@ function formatDate(dateStr) {
 }
 
 async function loadAdminMessages() {
-  const token = await currentUser.getIdToken();
+  const token = await currentUser.getIdToken(true);
 
-  const res = await fetch(apiUrl("/api/admin/messages"), {
+  const res = await fetchWithRetry(apiUrl("/api/admin/messages"), {
     headers: {
       "Authorization": `Bearer ${token}`
     }
+  }, {
+    retries: 1,
+    retryDelayMs: 2000,
+    timeoutMs: 15000
   });
 
   if (res.status === 401 || res.status === 403) {
@@ -47,7 +82,9 @@ async function loadAdminMessages() {
     return;
   }
 
+  await ensureOk(res);
   const data = await res.json();
+  setAdminStatus("");
 
   adminMessagesList.innerHTML = data.map((msg) => `
     <div class="message-card">
@@ -64,18 +101,57 @@ async function loadAdminMessages() {
   document.querySelectorAll(".reply-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const id = btn.dataset.id;
-      const reply = document.getElementById(`reply-${id}`).value.trim();
+      const textarea = document.getElementById(`reply-${id}`);
+      const reply = textarea.value.trim();
+      let replySaved = false;
 
-      await fetch(apiUrl("/api/admin/reply"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ id, reply })
-      });
+      if (!reply) {
+        setAdminStatus("Reply cannot be empty.");
+        textarea.focus();
+        clearAdminStatusLater();
+        return;
+      }
 
-      await loadAdminMessages();
+      btn.disabled = true;
+      btn.textContent = "Saving...";
+
+      try {
+        const freshToken = await currentUser.getIdToken(true);
+        const response = await fetchWithRetry(apiUrl("/api/admin/reply"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${freshToken}`
+          },
+          body: JSON.stringify({ id, reply })
+        }, {
+          retries: 1,
+          retryDelayMs: 2000,
+          timeoutMs: 15000
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          window.location.replace("/auth");
+          return;
+        }
+
+        await ensureOk(response);
+        setAdminStatus("Reply saved.");
+        clearAdminStatusLater();
+        replySaved = true;
+        btn.textContent = "Saved";
+        await delay(1200);
+        await loadAdminMessages();
+      } catch (error) {
+        console.error(error);
+        setAdminStatus(getFriendlyErrorMessage(error, "en"));
+        clearAdminStatusLater(2500);
+      } finally {
+        if (!replySaved && btn.isConnected) {
+          btn.disabled = false;
+          btn.textContent = "Save Reply";
+        }
+      }
     });
   });
 }
@@ -98,23 +174,33 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = resolvedUser;
 
   const token = await resolvedUser.getIdToken(true);
-  const meRes = await fetch(apiUrl("/api/me"), {
-    headers: {
-      "Authorization": `Bearer ${token}`
+  try {
+    const meRes = await fetchWithRetry(apiUrl("/api/me"), {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    }, {
+      retries: 1,
+      retryDelayMs: 2000,
+      timeoutMs: 15000
+    });
+
+    if (meRes.status === 401) {
+      window.location.replace("/auth");
+      return;
     }
-  });
 
-  if (meRes.status === 401) {
-    window.location.replace("/auth");
-    return;
+    await ensureOk(meRes);
+    const me = await meRes.json();
+
+    if (me.role !== "admin") {
+      window.location.replace("/dashboard");
+      return;
+    }
+
+    await loadAdminMessages();
+  } catch (error) {
+    console.error(error);
+    setAdminStatus(getFriendlyErrorMessage(error, "en"));
   }
-
-  const me = await meRes.json();
-
-  if (me.role !== "admin") {
-    window.location.replace("/dashboard");
-    return;
-  }
-
-  await loadAdminMessages();
 });
