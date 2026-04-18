@@ -20,9 +20,18 @@
     ],
     "cleanUrls": true,
     "rewrites": [
-      { "source": "/ru", "destination": "/index_ru.html" },
-      { "source": "/auth/ru", "destination": "/auth_ru.html" },
-      { "source": "/dashboard/ru", "destination": "/dashboard_ru.html" }
+      {
+        "source": "/ru",
+        "destination": "/index_ru.html"
+      },
+      {
+        "source": "/auth/ru",
+        "destination": "/auth_ru.html"
+      },
+      {
+        "source": "/dashboard/ru",
+        "destination": "/dashboard_ru.html"
+      }
     ]
   }
 }

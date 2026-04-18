@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "portfolio-1a377"
-  }
+    "default": "portfolio-1a377",
+    "cv": "portfolio-1a377"
+  },
+  "targets": {},
+  "etags": {}
 }
