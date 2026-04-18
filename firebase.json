@@ -10,5 +10,19 @@
   },
   "auth": {
     "providers": {}
+  },
+  "hosting": {
+    "public": "frontend/public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "cleanUrls": true,
+    "rewrites": [
+      { "source": "/ru", "destination": "/index_ru.html" },
+      { "source": "/auth/ru", "destination": "/auth_ru.html" },
+      { "source": "/dashboard/ru", "destination": "/dashboard_ru.html" }
+    ]
   }
 }
