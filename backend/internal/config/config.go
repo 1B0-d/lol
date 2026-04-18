@@ -30,7 +30,7 @@ func Load() Config {
 	return Config{
 		Port:            port,
 		StaticDir:       envOrDefault("STATIC_DIR", "frontend/public"),
-		ResumePath:      envOrDefault("RESUME_PATH", "docs/Resume.pdf"),
+		ResumePath:      envOrDefault("RESUME_PATH", "docs/CV_Ildar_en.pdf"),
 		CredentialsPath: credentialsPath(),
 		ProjectID:       os.Getenv("FIREBASE_PROJECT_ID"),
 		AllowedOrigins:  csvEnv("CORS_ALLOWED_ORIGINS"),

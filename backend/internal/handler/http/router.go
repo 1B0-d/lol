@@ -41,16 +41,18 @@ func init() {
 }
 
 type Handler struct {
-	service   *service.AppService
-	staticDir string
-	resumePDF string
+	service     *service.AppService
+	staticDir   string
+	resumePDF   string
+	resumeRUPDF string
 }
 
 func NewRouter(cfg config.Config, appService *service.AppService) stdhttp.Handler {
 	h := &Handler{
-		service:   appService,
-		staticDir: cfg.StaticDir,
-		resumePDF: cfg.ResumePath,
+		service:     appService,
+		staticDir:   cfg.StaticDir,
+		resumePDF:   cfg.ResumePath,
+		resumeRUPDF: filepath.Join(filepath.Dir(cfg.ResumePath), "CV_Ildar_ru.pdf"),
 	}
 
 	mux := stdhttp.NewServeMux()
@@ -70,6 +72,12 @@ func NewRouter(cfg config.Config, appService *service.AppService) stdhttp.Handle
 	mux.Handle("/metrics/", promhttp.Handler())
 	mux.HandleFunc("/Resume.pdf", func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 		stdhttp.ServeFile(w, r, h.resumePDF)
+	})
+	mux.HandleFunc("/CV_Ildar_en.pdf", func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+		stdhttp.ServeFile(w, r, h.resumePDF)
+	})
+	mux.HandleFunc("/CV_Ildar_ru.pdf", func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+		stdhttp.ServeFile(w, r, h.resumeRUPDF)
 	})
 
 	mux.Handle("/auth", noCache(stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
@@ -325,9 +333,16 @@ func StaticAssetWarnings(cfg config.Config) []string {
 	}
 
 	if info, err := os.Stat(cfg.ResumePath); err != nil {
-		warnings = append(warnings, fmt.Sprintf("resume file %q is unavailable: %v; /Resume.pdf may return 404", cfg.ResumePath, err))
+		warnings = append(warnings, fmt.Sprintf("resume file %q is unavailable: %v; /Resume.pdf and /CV_Ildar_en.pdf may return 404", cfg.ResumePath, err))
 	} else if info.IsDir() {
-		warnings = append(warnings, fmt.Sprintf("resume path %q is a directory, not a file; /Resume.pdf may return 404", cfg.ResumePath))
+		warnings = append(warnings, fmt.Sprintf("resume path %q is a directory, not a file; /Resume.pdf and /CV_Ildar_en.pdf may return 404", cfg.ResumePath))
+	}
+
+	ruResumePath := filepath.Join(filepath.Dir(cfg.ResumePath), "CV_Ildar_ru.pdf")
+	if info, err := os.Stat(ruResumePath); err != nil {
+		warnings = append(warnings, fmt.Sprintf("Russian resume file %q is unavailable: %v; /CV_Ildar_ru.pdf may return 404", ruResumePath, err))
+	} else if info.IsDir() {
+		warnings = append(warnings, fmt.Sprintf("Russian resume path %q is a directory, not a file; /CV_Ildar_ru.pdf may return 404", ruResumePath))
 	}
 
 	return warnings

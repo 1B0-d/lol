@@ -8,10 +8,16 @@
     return;
   }
 
-  const resumeUrl = `${rawBaseUrl}/Resume.pdf`;
-  document.querySelectorAll('a[href="/Resume.pdf"]').forEach((link) => {
-    link.href = resumeUrl;
-    link.target = "_blank";
-    link.rel = "noopener";
-  });
+  document
+    .querySelectorAll('a[href="/Resume.pdf"], a[href="/CV_Ildar_en.pdf"], a[href="/CV_Ildar_ru.pdf"]')
+    .forEach((link) => {
+      const currentHref = link.getAttribute("href");
+      if (!currentHref || !currentHref.startsWith("/")) {
+        return;
+      }
+
+      link.href = `${rawBaseUrl}${currentHref}`;
+      link.target = "_blank";
+      link.rel = "noopener";
+    });
 })();
