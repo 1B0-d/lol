@@ -1,0 +1,168 @@
+import { auth, authReady, googleProvider } from "/js/firebase-config.js?v=2";
+import { apiUrl } from "/js/site-config.js";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+
+const registerForm = document.getElementById("registerForm");
+const registerForm_ru= document.getElementById("registerForm_ru");
+const loginForm = document.getElementById("loginForm");
+const loginForm_ru = document.getElementById("loginForm_ru");
+const googleLoginBtn = document.getElementById("googleLoginBtn");
+const googleLoginBtn_ru = document.getElementById("googleLoginBtn_ru");
+const authMessage = document.getElementById("authMessage");
+
+// Redirect to dashboard if user is already logged in
+onAuthStateChanged(auth, async (user) => {
+  await authReady;
+  if (user) {
+    const token = await user.getIdToken();
+    const meRes = await fetch(apiUrl("/api/me"), {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (meRes.ok) {
+      const me = await meRes.json();
+      if (me.role === "admin") {
+        window.location.replace("/admin");
+        return;
+      }
+      const isDashboardRu = window.location.pathname.includes('/ru');
+      window.location.replace(isDashboardRu ? "/dashboard/ru" : "/dashboard");
+    }
+  }
+});
+
+async function redirectAfterAuth(user, name = "", lang) {
+  await authReady;
+  const token = await user.getIdToken();
+
+  await fetch(apiUrl("/api/bootstrap-user"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ name })
+  });
+
+  const meRes = await fetch(apiUrl("/api/me"), {
+    headers: {
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  const me = await meRes.json();
+
+  if (me.role === "admin") {
+    window.location.href = "/admin";
+    return;
+  }
+  if (lang ==="ru"){
+  window.location.href = "/dashboard/ru";
+  return;
+
+}
+  window.location.href = "/dashboard";
+}
+
+
+if(registerForm){
+registerForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("registerName").value.trim();
+  const email = document.getElementById("registerEmail").value.trim();
+  const password = document.getElementById("registerPassword").value;
+
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+await redirectAfterAuth(cred.user, name, "en");
+  } catch (err) {
+    console.error(err);
+    authMessage.textContent = `${err.code}: ${err.message}`;
+  }
+});}
+
+
+if(loginForm){
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+await redirectAfterAuth(cred.user, "", "en");
+  } catch (err) {
+    console.error(err);
+    authMessage.textContent = `${err.code}: ${err.message}`;
+  }
+});}
+
+
+if(registerForm_ru){
+registerForm_ru.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("registerName").value.trim();
+  const email = document.getElementById("registerEmail").value.trim();
+  const password = document.getElementById("registerPassword").value;
+
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+await redirectAfterAuth(cred.user, name, "ru");
+  } catch (err) {
+    console.error(err);
+    authMessage.textContent = `${err.code}: ${err.message}`;
+  }
+});}
+
+
+if(loginForm_ru){
+loginForm_ru.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+await redirectAfterAuth(cred.user, "", "ru");
+  } catch (err) {
+    console.error(err);
+    authMessage.textContent = `${err.code}: ${err.message}`;
+  }
+});}
+
+
+if(googleLoginBtn_ru){
+googleLoginBtn_ru.addEventListener("click", async () => {
+  try {
+    await authReady;
+    const cred = await signInWithPopup(auth, googleProvider);
+    await redirectAfterAuth(cred.user, cred.user.displayName || "","ru");
+  } catch (err) {
+    console.error(err);
+    authMessage.textContent = `${err.code}: ${err.message}`;
+  }
+});}
+
+
+if(googleLoginBtn){
+googleLoginBtn.addEventListener("click", async () => {
+  try {
+    await authReady;
+    const cred = await signInWithPopup(auth, googleProvider);
+    await redirectAfterAuth(cred.user, cred.user.displayName || "","en");
+  } catch (err) {
+    console.error(err);
+    authMessage.textContent = `${err.code}: ${err.message}`;
+  }
+});}

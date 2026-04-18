@@ -1,0 +1,32 @@
+[build]
+publish = "frontend/public"
+
+[[redirects]]
+from = "/ru"
+to = "/index_ru.html"
+status = 200
+
+[[redirects]]
+from = "/auth"
+to = "/auth.html"
+status = 200
+
+[[redirects]]
+from = "/auth/ru"
+to = "/auth_ru.html"
+status = 200
+
+[[redirects]]
+from = "/dashboard"
+to = "/dashboard.html"
+status = 200
+
+[[redirects]]
+from = "/dashboard/ru"
+to = "/dashboard_ru.html"
+status = 200
+
+[[redirects]]
+from = "/admin"
+to = "/admin.html"
+status = 200

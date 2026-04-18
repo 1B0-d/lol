@@ -68,6 +68,7 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 firebase/serviceAccountKey.json
+firebase/serviceAccountKey*.json
 # Secrets
 serviceAccountKey.json
 *.pem

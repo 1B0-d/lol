@@ -2,11 +2,11 @@
   "firestore": {
     "database": "(default)",
     "location": "eur3",
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
+    "rules": "firebase/config/firestore.rules",
+    "indexes": "firebase/config/firestore.indexes.json"
   },
   "database": {
-    "rules": "database.rules.json"
+    "rules": "firebase/config/database.rules.json"
   },
   "auth": {
     "providers": {}

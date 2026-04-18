@@ -1,0 +1,50 @@
+groups:
+  - name: slo-alerts
+    rules:
+      # Latency SLO: 95% of requests < 500ms
+      - alert: LatencySLOWarning
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job="backend"}[5m]))) > 0.5
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latency SLO warning - burning error budget at 2x rate"
+          description: "95th percentile request latency exceeded 500ms for 5 minutes. Error budget burning at accelerated rate."
+
+      - alert: LatencySLOCritical
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job="backend"}[5m]))) > 1.0
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Latency SLO critical - burning error budget at 10x rate"
+          description: "95th percentile request latency exceeded 1 second for 5 minutes. Error budget burning at critical rate."
+
+      # Availability SLO: 99% success rate
+      - alert: AvailabilitySLOWarning
+        expr: |
+          1 - (
+            sum(rate(http_requests_total{status=~"2..", job="backend"}[5m]))
+            /
+            sum(rate(http_requests_total{job="backend"}[5m]))
+          ) > 0.05
+        for: 15s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Availability SLO warning - burning error budget at 2x rate"
+          description: "Request success rate dropped below 95% in the last 5 minutes. Error budget burning at 2x normal rate."
+
+      - alert: AvailabilitySLOCritical
+        expr: |
+          1 - (
+            sum(rate(http_requests_total{status=~"2..", job="backend"}[5m]))
+            /
+            sum(rate(http_requests_total{job="backend"}[5m]))
+          ) > 0.1
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Availability SLO critical - burning error budget at 10x rate"
+          description: "Request success rate dropped below 90% in the last 5 minutes. Error budget burning at 10x normal rate."

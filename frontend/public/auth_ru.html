@@ -1,0 +1,58 @@
+<!-- auth.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Авторизация</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="page auth-page">
+          <details class="nav-dropdown">
+    <summary>Язык</summary>
+    <div class="nav-dropdown-menu">
+      <a href="/auth"class="btn btn-secondary">English</a>
+    </div>
+  </details>
+    <div class="nav-links" style="margin-bottom: 25px;">
+      <a href="/ru#about">Обо мне</a>
+      <a href="/ru#experience">Опыт</a>
+      <a href="/ru#contact">Контакты</a>
+      <a href="/dashboard/ru">Панель</a>
+      <a href="/Resume.pdf" download class="btn btn-secondary">Скачать резюме</a>
+    </div>
+
+    <div class="auth-grid">
+      <section class="card">
+        <h2>Регистрация</h2>
+        <form id="registerForm_ru">
+          <input id="registerName" type="text" placeholder="Имя" required />
+          <input id="registerEmail" type="email" placeholder="Email" required />
+          <input id="registerPassword" type="password" placeholder="Пароль" required />
+          <button type="submit">Зарегистрироваться</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Вход</h2>
+        <form id="loginForm_ru">
+          <input id="loginEmail" type="email" placeholder="Email" required />
+          <input id="loginPassword" type="password" placeholder="Пароль" required />
+          <button type="submit">Войти</button>
+        </form>
+
+        <button id="googleLoginBtn_ru" class="secondary-btn" type="button">
+          Продолжить через Google
+        </button>
+      </section>
+    </div>
+
+    <p id="authMessage"></p>
+  </main>
+
+  <script src="/js/runtime-config.js"></script>
+  <script src="/js/site-bootstrap.js"></script>
+  <script type="module" src="/js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+version: "3.9"
+
+services:
+  frontend:
+    image: portfolio-frontend:swarm
+    ports:
+      - target: 80
+        published: 8080
+        protocol: tcp
+        mode: ingress
+    networks:
+      - sre-net
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+      update_config:
+        order: start-first
+        parallelism: 1
+
+  backend:
+    image: portfolio-backend:swarm
+    environment:
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-portfolio-1a377}
+      FIREBASE_CREDENTIALS_PATH: /run/secrets/serviceAccountKey.json
+      PORT: 8080
+    secrets:
+      - source: serviceAccountKey
+        target: serviceAccountKey.json
+    networks:
+      - sre-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      update_config:
+        order: start-first
+        parallelism: 1
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+        mode: ingress
+    configs:
+      - source: prometheus_yml
+        target: /etc/prometheus/prometheus.yml
+      - source: alerts_yml
+        target: /etc/prometheus/alerts.yml
+    volumes:
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --storage.tsdb.retention.time=200h
+      - --web.enable-lifecycle
+    networks:
+      - sre-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    ports:
+      - target: 9100
+        published: 9100
+        protocol: tcp
+        mode: host
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    networks:
+      - sre-net
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: ingress
+    configs:
+      - source: grafana_datasources
+        target: /etc/grafana/provisioning/datasources/datasources.yml
+      - source: grafana_dashboards_provider
+        target: /etc/grafana/provisioning/dashboards/dashboards.yml
+      - source: grafana_dashboard
+        target: /var/lib/grafana/dashboards/grafana-dashboard-fixed.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - sre-net
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+networks:
+  sre-net:
+    driver: overlay
+
+volumes:
+  grafana_data:
+  prometheus_data:
+
+secrets:
+  serviceAccountKey:
+    file: ./serviceAccountKey.json
+
+configs:
+  prometheus_yml:
+    file: ./observability/prometheus/prometheus.yml
+  alerts_yml:
+    file: ./observability/prometheus/alerts.yml
+  grafana_datasources:
+    file: ./observability/grafana/provisioning/datasources/datasources.yml
+  grafana_dashboards_provider:
+    file: ./observability/grafana/provisioning/dashboards/dashboards.yml
+  grafana_dashboard:
+    file: ./observability/grafana/dashboards/grafana-dashboard-fixed.json
+
