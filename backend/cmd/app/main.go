@@ -14,15 +14,23 @@ func main() {
 	ctx := context.Background()
 	cfg := config.Load()
 
-	if err := httpHandler.EnsurePaths(cfg); err != nil {
+	log.Printf("startup config: %s", cfg.StartupSummary())
+
+	if err := cfg.ValidateCritical(); err != nil {
 		log.Fatal(err)
 	}
 
+	for _, warning := range httpHandler.StaticAssetWarnings(cfg) {
+		log.Printf("startup warning: %s", warning)
+	}
+
+	log.Printf("initializing firebase")
 	authClient, firestoreClient, err := config.InitFirebase(ctx, cfg)
 	if err != nil {
-		log.Fatalf("failed to initialize firebase: %v", err)
+		log.Fatalf("failed to initialize firebase (project_id=%q credentials_path=%q): %v", cfg.ProjectID, cfg.CredentialsPath, err)
 	}
 	defer firestoreClient.Close()
+	log.Printf("firebase initialized successfully")
 
 	userRepo := repository.NewUserRepository(firestoreClient)
 	messageRepo := repository.NewMessageRepository(firestoreClient)
@@ -31,6 +39,6 @@ func main() {
 	router := httpHandler.NewRouter(cfg, appService)
 	server := httpHandler.Server(cfg, router)
 
-	log.Printf("server running on http://localhost:%s", cfg.Port)
+	log.Printf("server listening on :%s", cfg.Port)
 	log.Fatal(server.ListenAndServe())
 }

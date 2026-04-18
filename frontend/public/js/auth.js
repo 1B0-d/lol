@@ -1,4 +1,10 @@
 import { auth, authReady, googleProvider } from "/js/firebase-config.js?v=2";
+import {
+  ensureOk,
+  fetchWithRetry,
+  getFriendlyErrorMessage,
+  getPendingRequestMessage
+} from "/js/api-client.js";
 import { apiUrl } from "/js/site-config.js";
 import {
   createUserWithEmailAndPassword,
@@ -14,48 +20,73 @@ const loginForm_ru = document.getElementById("loginForm_ru");
 const googleLoginBtn = document.getElementById("googleLoginBtn");
 const googleLoginBtn_ru = document.getElementById("googleLoginBtn_ru");
 const authMessage = document.getElementById("authMessage");
+const isRussianPage = window.location.pathname.includes("/ru");
+const currentLang = isRussianPage ? "ru" : "en";
+
+function setAuthMessage(message) {
+  authMessage.textContent = message;
+}
 
 // Redirect to dashboard if user is already logged in
 onAuthStateChanged(auth, async (user) => {
   await authReady;
   if (user) {
-    const token = await user.getIdToken();
-    const meRes = await fetch(apiUrl("/api/me"), {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    });
+    try {
+      const token = await user.getIdToken();
+      const meRes = await fetchWithRetry(apiUrl("/api/me"), {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      }, {
+        retries: 2,
+        retryDelayMs: 3000,
+        timeoutMs: 15000
+      });
+      await ensureOk(meRes);
 
-    if (meRes.ok) {
       const me = await meRes.json();
       if (me.role === "admin") {
         window.location.replace("/admin");
         return;
       }
-      const isDashboardRu = window.location.pathname.includes('/ru');
+      const isDashboardRu = window.location.pathname.includes("/ru");
       window.location.replace(isDashboardRu ? "/dashboard/ru" : "/dashboard");
+    } catch (error) {
+      console.error(error);
+      setAuthMessage(getFriendlyErrorMessage(error, currentLang));
     }
   }
 });
 
 async function redirectAfterAuth(user, name = "", lang) {
   await authReady;
+  setAuthMessage(getPendingRequestMessage(lang));
   const token = await user.getIdToken();
 
-  await fetch(apiUrl("/api/bootstrap-user"), {
+  const bootstrapResponse = await fetchWithRetry(apiUrl("/api/bootstrap-user"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
     body: JSON.stringify({ name })
+  }, {
+    retries: 2,
+    retryDelayMs: 3000,
+    timeoutMs: 15000
   });
+  await ensureOk(bootstrapResponse);
 
-  const meRes = await fetch(apiUrl("/api/me"), {
+  const meRes = await fetchWithRetry(apiUrl("/api/me"), {
     headers: {
       "Authorization": `Bearer ${token}`
     }
+  }, {
+    retries: 2,
+    retryDelayMs: 3000,
+    timeoutMs: 15000
   });
+  await ensureOk(meRes);
 
   const me = await meRes.json();
 
@@ -85,7 +116,7 @@ registerForm.addEventListener("submit", async (e) => {
 await redirectAfterAuth(cred.user, name, "en");
   } catch (err) {
     console.error(err);
-    authMessage.textContent = `${err.code}: ${err.message}`;
+    setAuthMessage(getFriendlyErrorMessage(err, "en"));
   }
 });}
 
@@ -102,7 +133,7 @@ loginForm.addEventListener("submit", async (e) => {
 await redirectAfterAuth(cred.user, "", "en");
   } catch (err) {
     console.error(err);
-    authMessage.textContent = `${err.code}: ${err.message}`;
+    setAuthMessage(getFriendlyErrorMessage(err, "en"));
   }
 });}
 
@@ -120,7 +151,7 @@ registerForm_ru.addEventListener("submit", async (e) => {
 await redirectAfterAuth(cred.user, name, "ru");
   } catch (err) {
     console.error(err);
-    authMessage.textContent = `${err.code}: ${err.message}`;
+    setAuthMessage(getFriendlyErrorMessage(err, "ru"));
   }
 });}
 
@@ -137,7 +168,7 @@ loginForm_ru.addEventListener("submit", async (e) => {
 await redirectAfterAuth(cred.user, "", "ru");
   } catch (err) {
     console.error(err);
-    authMessage.textContent = `${err.code}: ${err.message}`;
+    setAuthMessage(getFriendlyErrorMessage(err, "ru"));
   }
 });}
 
@@ -150,7 +181,7 @@ googleLoginBtn_ru.addEventListener("click", async () => {
     await redirectAfterAuth(cred.user, cred.user.displayName || "","ru");
   } catch (err) {
     console.error(err);
-    authMessage.textContent = `${err.code}: ${err.message}`;
+    setAuthMessage(getFriendlyErrorMessage(err, "ru"));
   }
 });}
 
@@ -163,6 +194,6 @@ googleLoginBtn.addEventListener("click", async () => {
     await redirectAfterAuth(cred.user, cred.user.displayName || "","en");
   } catch (err) {
     console.error(err);
-    authMessage.textContent = `${err.code}: ${err.message}`;
+    setAuthMessage(getFriendlyErrorMessage(err, "en"));
   }
 });}

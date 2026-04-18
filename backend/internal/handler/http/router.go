@@ -315,12 +315,20 @@ func noCache(next stdhttp.Handler) stdhttp.Handler {
 	})
 }
 
-func EnsurePaths(cfg config.Config) error {
-	if _, err := os.Stat(cfg.StaticDir); err != nil {
-		return fmt.Errorf("static dir not found: %w", err)
+func StaticAssetWarnings(cfg config.Config) []string {
+	var warnings []string
+
+	if info, err := os.Stat(cfg.StaticDir); err != nil {
+		warnings = append(warnings, fmt.Sprintf("static assets directory %q is unavailable: %v; API routes will still work, but frontend pages on this service may return 404", cfg.StaticDir, err))
+	} else if !info.IsDir() {
+		warnings = append(warnings, fmt.Sprintf("static assets path %q is not a directory; frontend pages on this service may return 404", cfg.StaticDir))
 	}
-	if _, err := os.Stat(cfg.ResumePath); err != nil {
-		return fmt.Errorf("resume file not found: %w", err)
+
+	if info, err := os.Stat(cfg.ResumePath); err != nil {
+		warnings = append(warnings, fmt.Sprintf("resume file %q is unavailable: %v; /Resume.pdf may return 404", cfg.ResumePath, err))
+	} else if info.IsDir() {
+		warnings = append(warnings, fmt.Sprintf("resume path %q is a directory, not a file; /Resume.pdf may return 404", cfg.ResumePath))
 	}
-	return nil
+
+	return warnings
 }

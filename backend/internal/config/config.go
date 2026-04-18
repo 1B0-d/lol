@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 
@@ -34,6 +35,43 @@ func Load() Config {
 		ProjectID:       os.Getenv("FIREBASE_PROJECT_ID"),
 		AllowedOrigins:  csvEnv("CORS_ALLOWED_ORIGINS"),
 	}
+}
+
+func (c Config) ValidateCritical() error {
+	var issues []string
+
+	if strings.TrimSpace(c.ProjectID) == "" {
+		issues = append(issues, "FIREBASE_PROJECT_ID is not set")
+	}
+
+	if strings.TrimSpace(c.CredentialsPath) == "" {
+		issues = append(issues, "FIREBASE_CREDENTIALS_PATH resolved to an empty path")
+	} else {
+		info, err := os.Stat(c.CredentialsPath)
+		if err != nil {
+			issues = append(issues, fmt.Sprintf("firebase credentials file not found at %q: %v", c.CredentialsPath, err))
+		} else if info.IsDir() {
+			issues = append(issues, fmt.Sprintf("firebase credentials path %q points to a directory, not a JSON file", c.CredentialsPath))
+		}
+	}
+
+	if len(issues) == 0 {
+		return nil
+	}
+
+	return fmt.Errorf("startup configuration is invalid:\n- %s", strings.Join(issues, "\n- "))
+}
+
+func (c Config) StartupSummary() string {
+	return fmt.Sprintf(
+		"port=%s project_id=%q credentials_path=%q static_dir=%q resume_path=%q cors_allowed_origins=%d",
+		c.Port,
+		c.ProjectID,
+		c.CredentialsPath,
+		c.StaticDir,
+		c.ResumePath,
+		len(c.AllowedOrigins),
+	)
 }
 
 func InitFirebase(ctx context.Context, cfg Config) (*auth.Client, *firestore.Client, error) {
