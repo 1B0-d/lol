@@ -4,8 +4,8 @@ import {
   fetchWithRetry,
   getFriendlyErrorMessage,
   getPendingRequestMessage
-} from "/js/api-client.js";
-import { apiUrl } from "/js/site-config.js";
+} from "/js/api-client.js?v=1";
+import { apiUrl } from "/js/site-config.js?v=1";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,

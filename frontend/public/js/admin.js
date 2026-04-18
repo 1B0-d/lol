@@ -1,5 +1,5 @@
 import { auth, authReady } from "/js/firebase-config.js?v=2";
-import { apiUrl } from "/js/site-config.js";
+import { apiUrl } from "/js/site-config.js?v=1";
 import {
   onAuthStateChanged,
   signOut
