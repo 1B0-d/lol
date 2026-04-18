@@ -7,6 +7,7 @@ import {
 
 const adminMessagesList = document.getElementById("adminMessagesList");
 const logoutBtn = document.getElementById("logoutBtn");
+const logoutRedirectKey = "logout_redirect_pending";
 
 let currentUser = null;
 
@@ -80,6 +81,8 @@ async function loadAdminMessages() {
 }
 
 logoutBtn.addEventListener("click", async () => {
+  sessionStorage.setItem(logoutRedirectKey, "1");
+  currentUser = null;
   await signOut(auth);
   window.location.replace("/auth");
 });

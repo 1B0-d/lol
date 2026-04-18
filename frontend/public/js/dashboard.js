@@ -8,6 +8,7 @@ import {
 const logoutBtn = document.getElementById("logoutBtn");
 const messageForm = document.getElementById("messageForm");
 const messagesList = document.getElementById("messagesList");
+const logoutRedirectKey = "logout_redirect_pending";
 
 let currentUser = null;
 
@@ -91,7 +92,9 @@ messageForm.addEventListener("submit", async (e) => {
 });
 
 logoutBtn.addEventListener("click", async () => {
-      const authPath = window.location.pathname.includes('/ru') ? '/auth/ru' : '/auth';
+  const authPath = window.location.pathname.includes('/ru') ? '/auth/ru' : '/auth';
+  sessionStorage.setItem(logoutRedirectKey, "1");
+  currentUser = null;
   await signOut(auth);
   window.location.replace(authPath);
 });

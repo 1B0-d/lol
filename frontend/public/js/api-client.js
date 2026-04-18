@@ -100,32 +100,32 @@ export async function ensureOk(response) {
 
 export function getPendingRequestMessage(lang = "en") {
   if (lang === "ru") {
-    return "Подключаемся к серверу. Если Render был в спящем режиме, это может занять 10-30 секунд...";
+    return "Подключаемся к серверу. Если сервер был в спящем режиме, это может занять 10-30 секунд...";
   }
 
-  return "Connecting to the server. If Render was sleeping, this can take 10-30 seconds...";
+  return "Connecting to the server. If server was sleeping, this can take 10-30 seconds...";
 }
 
 export function getFriendlyErrorMessage(error, lang = "en") {
   if (lang === "ru") {
     if (error instanceof ApiRequestError && error.key === "timeout") {
-      return "Сервер отвечает слишком долго. Скорее всего, Render еще запускает бэкенд. Подожди немного и попробуй еще раз.";
+      return "Сервер отвечает слишком долго. Скорее всего, сервер еще запускается. Подождите немного и попробуйте еще раз.";
     }
 
     if (error instanceof TypeError && error.message === "Failed to fetch") {
-      return "Не удалось связаться с сервером. Возможно, бэкенд еще не поднялся или CORS еще не настроен.";
+      return "Не удалось связаться с сервером. Возможно, сервер еще не запустился или CORS еще не настроен.";
     }
 
     if (error instanceof ApiRequestError && RETRIABLE_STATUS_CODES.has(error.status)) {
-      return "Сервер еще запускается и пока недоступен. Подожди 10-30 секунд и попробуй еще раз.";
+      return "Сервер еще запускается и пока недоступен. Подождите 10-30 секунд и попробуйте еще раз.";
     }
   } else {
     if (error instanceof ApiRequestError && error.key === "timeout") {
-      return "The server is taking too long to respond. Render may still be starting the backend. Please wait a bit and try again.";
+      return "The server is taking too long to respond.Server may still be starting. Please wait a bit and try again.";
     }
 
     if (error instanceof TypeError && error.message === "Failed to fetch") {
-      return "Could not reach the server. The backend may still be starting up, or CORS may not be configured yet.";
+      return "Could not reach the server. The server may still be starting up, or CORS may not be configured yet.";
     }
 
     if (error instanceof ApiRequestError && RETRIABLE_STATUS_CODES.has(error.status)) {
@@ -142,7 +142,7 @@ export function getFriendlyErrorMessage(error, lang = "en") {
   }
 
   if (lang === "ru") {
-    return "Произошла ошибка. Попробуй еще раз.";
+    return "Произошла ошибка. Попробуйте еще раз.";
   }
 
   return "Something went wrong. Please try again.";

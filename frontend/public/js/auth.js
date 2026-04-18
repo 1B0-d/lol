@@ -10,7 +10,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
-  onAuthStateChanged
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const registerForm = document.getElementById("registerForm");
@@ -22,6 +23,12 @@ const googleLoginBtn_ru = document.getElementById("googleLoginBtn_ru");
 const authMessage = document.getElementById("authMessage");
 const isRussianPage = window.location.pathname.includes("/ru");
 const currentLang = isRussianPage ? "ru" : "en";
+const logoutRedirectKey = "logout_redirect_pending";
+let skipNextAutoRedirect = sessionStorage.getItem(logoutRedirectKey) === "1";
+
+if (skipNextAutoRedirect) {
+  sessionStorage.removeItem(logoutRedirectKey);
+}
 
 function setAuthMessage(message) {
   authMessage.textContent = message;
@@ -30,6 +37,20 @@ function setAuthMessage(message) {
 // Redirect to dashboard if user is already logged in
 onAuthStateChanged(auth, async (user) => {
   await authReady;
+  if (skipNextAutoRedirect) {
+    skipNextAutoRedirect = false;
+
+    if (user) {
+      try {
+        await signOut(auth);
+      } catch (error) {
+        console.warn("logout cleanup failed", error);
+      }
+    }
+
+    return;
+  }
+
   if (user) {
     try {
       const token = await user.getIdToken();
