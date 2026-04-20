@@ -40,8 +40,6 @@ services:
       - --web.console.templates=/etc/prometheus/consoles
       - --storage.tsdb.retention.time=200h
       - --web.enable-lifecycle
-    depends_on:
-      - cadvisor
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -58,16 +56,16 @@ services:
       - --path.sysfs=/host/sys
       - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
 
-grafana:
-  image: grafana/grafana:latest
-  container_name: grafana
-  ports:
-    - "3000:3000"
-  volumes:
-    - grafana_data:/var/lib/grafana
-    - ./observability/grafana/provisioning:/etc/grafana/provisioning
-    - ./observability/grafana/dashboards:/var/lib/grafana/dashboards
-  depends_on:
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
       - prometheus
 
 volumes:
