@@ -1,0 +1,39 @@
+name: Auto push changes
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Make changes
+        run: |
+          go mod tidy
+          go fmt ./...
+      - name: Verify
+        run: |
+          go test ./...
+          go build ./backend/cmd/app
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes"
+            exit 0
+          fi
+
+          git add -A
+          git commit -m "chore: auto-update"
+          git push origin HEAD:main
