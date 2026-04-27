@@ -1,0 +1,13 @@
+- name: Scale containers
+  hosts: web
+  gather_facts: false
+
+  tasks:
+    - name: Remove old containers
+      command: docker rm -f nginx_{{ item }}
+      loop: [8084, 8085, 8086]
+      ignore_errors: true
+
+    - name: Run multiple containers
+      command: docker run -d --name nginx_{{ item }} -p {{ item }}:80 nginx
+      loop: [8084, 8085, 8086]
