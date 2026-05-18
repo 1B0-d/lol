@@ -19,6 +19,7 @@ type Config struct {
 	CredentialsPath string
 	ProjectID       string
 	AllowedOrigins  []string
+	OrderServiceURL string
 }
 
 func Load() Config {
@@ -34,6 +35,7 @@ func Load() Config {
 		CredentialsPath: credentialsPath(),
 		ProjectID:       os.Getenv("FIREBASE_PROJECT_ID"),
 		AllowedOrigins:  csvEnv("CORS_ALLOWED_ORIGINS"),
+		OrderServiceURL: strings.TrimRight(envOrDefault("ORDER_SERVICE_URL", "http://order-service:3000"), "/"),
 	}
 }
 
@@ -64,13 +66,14 @@ func (c Config) ValidateCritical() error {
 
 func (c Config) StartupSummary() string {
 	return fmt.Sprintf(
-		"port=%s project_id=%q credentials_path=%q static_dir=%q resume_path=%q cors_allowed_origins=%d",
+		"port=%s project_id=%q credentials_path=%q static_dir=%q resume_path=%q cors_allowed_origins=%d order_service_url=%q",
 		c.Port,
 		c.ProjectID,
 		c.CredentialsPath,
 		c.StaticDir,
 		c.ResumePath,
 		len(c.AllowedOrigins),
+		c.OrderServiceURL,
 	)
 }
 

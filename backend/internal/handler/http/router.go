@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	stdhttp "net/http"
 	"os"
 	"path/filepath"
@@ -41,32 +42,40 @@ func init() {
 }
 
 type Handler struct {
-	service     *service.AppService
-	staticDir   string
-	resumePDF   string
-	resumeRUPDF string
+	service         *service.AppService
+	staticDir       string
+	resumePDF       string
+	resumeRUPDF     string
+	orderServiceURL string
+	httpClient      *stdhttp.Client
 }
 
 func NewRouter(cfg config.Config, appService *service.AppService) stdhttp.Handler {
 	h := &Handler{
-		service:     appService,
-		staticDir:   cfg.StaticDir,
-		resumePDF:   cfg.ResumePath,
-		resumeRUPDF: filepath.Join(filepath.Dir(cfg.ResumePath), "CV_Ildar_ru.pdf"),
+		service:         appService,
+		staticDir:       cfg.StaticDir,
+		resumePDF:       cfg.ResumePath,
+		resumeRUPDF:     filepath.Join(filepath.Dir(cfg.ResumePath), "CV_Ildar_ru.pdf"),
+		orderServiceURL: cfg.OrderServiceURL,
+		httpClient:      &stdhttp.Client{Timeout: 5 * time.Second},
 	}
 
 	mux := stdhttp.NewServeMux()
 
 	mux.HandleFunc("/api/bootstrap-user", instrumentHandler("/api/bootstrap-user", h.bootstrapUser))
 	mux.HandleFunc("/api/me", instrumentHandler("/api/me", h.me))
+	mux.HandleFunc("/api/profile", instrumentHandler("/api/profile", h.profile))
+	mux.HandleFunc("/api/projects", instrumentHandler("/api/projects", h.projects))
+	mux.HandleFunc("/api/my-orders", instrumentHandler("/api/my-orders", h.myOrders))
 	mux.HandleFunc("/api/messages", instrumentHandler("/api/messages", h.messages))
 	mux.HandleFunc("/api/admin/messages", instrumentHandler("/api/admin/messages", h.adminMessages))
 	mux.HandleFunc("/api/admin/reply", instrumentHandler("/api/admin/reply", h.adminReply))
 
-	mux.HandleFunc("/healthz", func(w stdhttp.ResponseWriter, _ *stdhttp.Request) {
-		w.WriteHeader(stdhttp.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
+	healthHandler := func(w stdhttp.ResponseWriter, _ *stdhttp.Request) {
+		writeJSON(w, stdhttp.StatusOK, map[string]string{"status": "ok", "service": "portfolio-service"})
+	}
+	mux.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("/healthz", healthHandler)
 
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/metrics/", promhttp.Handler())
@@ -165,6 +174,103 @@ func (h *Handler) me(w stdhttp.ResponseWriter, r *stdhttp.Request) {
 	}
 
 	writeJSON(w, stdhttp.StatusOK, user)
+}
+
+func (h *Handler) profile(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+	if r.Method != stdhttp.MethodGet {
+		writeJSON(w, stdhttp.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	user, err := h.service.VerifyRequest(requestAdapter{r})
+	if err != nil {
+		writeJSON(w, stdhttp.StatusUnauthorized, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, stdhttp.StatusOK, map[string]any{
+		"user": user,
+		"profile": map[string]any{
+			"name":     "Ildar Savzikhanov",
+			"headline": "Software Engineering student",
+			"location": "Kazakhstan",
+			"skills":   []string{"Go", "Node.js", "React", "MongoDB", "Firebase", "Docker"},
+		},
+	})
+}
+
+func (h *Handler) projects(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+	if r.Method != stdhttp.MethodGet {
+		writeJSON(w, stdhttp.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	if _, err := h.service.VerifyRequest(requestAdapter{r}); err != nil {
+		writeJSON(w, stdhttp.StatusUnauthorized, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJSON(w, stdhttp.StatusOK, []map[string]any{
+		{
+			"id":          "portfolio-service",
+			"title":       "Portfolio Service",
+			"description": "Go service with Firebase authentication, profile data, project data, and service-to-service order lookup.",
+			"stack":       []string{"Go", "Firebase", "Docker"},
+		},
+		{
+			"id":          "order-service",
+			"title":       "Shop Order Service",
+			"description": "Node.js service for product catalog and transactional order creation backed by MongoDB.",
+			"stack":       []string{"Node.js", "Express", "MongoDB"},
+		},
+		{
+			"id":          "sre-platform",
+			"title":       "DevOps/SRE Assignment Platform",
+			"description": "Containerized microservices setup prepared for incident simulation and observability.",
+			"stack":       []string{"Docker Compose", "Nginx", "Firebase Auth"},
+		},
+	})
+}
+
+func (h *Handler) myOrders(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+	if r.Method != stdhttp.MethodGet {
+		writeJSON(w, stdhttp.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+
+	if _, err := h.service.VerifyRequest(requestAdapter{r}); err != nil {
+		writeJSON(w, stdhttp.StatusUnauthorized, map[string]string{"error": err.Error()})
+		return
+	}
+
+	target := h.orderServiceURL + "/api/orders/my"
+	if r.URL.RawQuery != "" {
+		target += "?" + r.URL.RawQuery
+	}
+
+	req, err := stdhttp.NewRequestWithContext(r.Context(), stdhttp.MethodGet, target, nil)
+	if err != nil {
+		writeJSON(w, stdhttp.StatusServiceUnavailable, map[string]string{"error": "Order service unavailable"})
+		return
+	}
+	req.Header.Set("Authorization", r.Header.Get("Authorization"))
+
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		writeJSON(w, stdhttp.StatusServiceUnavailable, map[string]string{"error": "Order service unavailable"})
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil || resp.StatusCode >= 500 {
+		writeJSON(w, stdhttp.StatusServiceUnavailable, map[string]string{"error": "Order service unavailable"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(resp.StatusCode)
+	_, _ = w.Write(body)
 }
 
 func (h *Handler) messages(w stdhttp.ResponseWriter, r *stdhttp.Request) {

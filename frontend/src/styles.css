@@ -372,6 +372,37 @@ section {
   margin-top: 16px;
 }
 
+.assignment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.assignment-item {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(17, 24, 39, 0.6);
+}
+
+.assignment-item p {
+  margin-bottom: auto;
+  color: var(--muted);
+}
+
+.assignment-item button {
+  width: 100%;
+  margin-top: auto;
+}
+
+.muted-note {
+  color: var(--muted);
+}
+
 .skill-groups {
   grid-template-columns: repeat(2, 1fr);
   margin-top: 18px;

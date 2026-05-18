@@ -96,6 +96,8 @@ export async function ensureOk(response) {
     const payload = await response.clone().json();
     if (typeof payload?.error === "string" && payload.error.trim()) {
       message = payload.error.trim();
+    } else if (typeof payload?.message === "string" && payload.message.trim()) {
+      message = payload.message.trim();
     }
   } catch {
     const text = await response.clone().text().catch(() => "");

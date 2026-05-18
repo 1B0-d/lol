@@ -8,7 +8,7 @@ import {
 } from "firebase/auth";
 import { Download, LogOut, Mail, Send } from "lucide-react";
 import { ensureOk, fetchWithRetry, getFriendlyErrorMessage, getPendingRequestMessage } from "./api.js";
-import { apiUrl, backendAssetUrl } from "./config.js";
+import { apiUrl, backendAssetUrl, orderApiUrl, productApiUrl } from "./config.js";
 import { auth, authReady, googleProvider } from "./firebase.js";
 import { content } from "./content.js";
 
@@ -383,6 +383,10 @@ function DashboardPage({ lang, onNavigate }) {
   const t = content[lang].dashboard;
   const [currentUser, setCurrentUser] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [profile, setProfile] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState("");
   const [form, setForm] = useState({ subject: "", text: "" });
   const authPath = lang === "ru" ? "/auth/ru" : "/auth";
@@ -399,6 +403,36 @@ function DashboardPage({ lang, onNavigate }) {
     await ensureOk(res);
     setMessages(await res.json());
     setStatus("");
+  };
+
+  const loadAssignmentData = async (user) => {
+    const token = await user.getIdToken();
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const [profileRes, projectsRes, productsRes, ordersRes] = await Promise.all([
+      fetchWithRetry(apiUrl("/api/profile"), { headers }, { retries: 2, retryDelayMs: 3000, timeoutMs: 8000 }),
+      fetchWithRetry(apiUrl("/api/projects"), { headers }, { retries: 2, retryDelayMs: 3000, timeoutMs: 8000 }),
+      fetchWithRetry(productApiUrl("/api/products?limit=6"), { headers }, { retries: 1, retryDelayMs: 1500, timeoutMs: 8000 }),
+      fetchWithRetry(apiUrl("/api/my-orders"), { headers }, { retries: 1, retryDelayMs: 1500, timeoutMs: 8000 })
+    ]);
+
+    for (const res of [profileRes, projectsRes, productsRes, ordersRes]) {
+      if (res.status === 401) {
+        onNavigate(authPath, true);
+        return;
+      }
+      await ensureOk(res);
+    }
+
+    const profilePayload = await profileRes.json();
+    const projectPayload = await projectsRes.json();
+    const productPayload = await productsRes.json();
+    const orderPayload = await ordersRes.json();
+
+    setProfile(profilePayload);
+    setProjects(Array.isArray(projectPayload) ? projectPayload : projectPayload.items || []);
+    setProducts(productPayload.items || productPayload || []);
+    setOrders(orderPayload.items || orderPayload || []);
   };
 
   useEffect(() => {
@@ -431,7 +465,10 @@ function DashboardPage({ lang, onNavigate }) {
           return;
         }
 
-        await loadMessages(resolvedUser);
+        await Promise.all([
+          loadMessages(resolvedUser),
+          loadAssignmentData(resolvedUser)
+        ]);
       } catch (error) {
         setStatus(getFriendlyErrorMessage(error, lang));
       }
@@ -458,6 +495,25 @@ function DashboardPage({ lang, onNavigate }) {
     }
   };
 
+  const createOrder = async (product) => {
+    if (!currentUser) return;
+
+    try {
+      setStatus("Creating order...");
+      const token = await currentUser.getIdToken();
+      const response = await fetchWithRetry(orderApiUrl("/api/orders"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ productId: product._id, quantity: 1 })
+      }, { retries: 1, retryDelayMs: 1500, timeoutMs: 8000 });
+      await ensureOk(response);
+      await loadAssignmentData(currentUser);
+      setStatus("Order created.");
+    } catch (error) {
+      setStatus(getFriendlyErrorMessage(error, lang));
+    }
+  };
+
   const logout = async () => {
     sessionStorage.setItem(logoutRedirectKey, "1");
     await signOut(auth);
@@ -471,6 +527,62 @@ function DashboardPage({ lang, onNavigate }) {
         <h1>{t.title}</h1>
         <button className="small-button" type="button" onClick={logout}><LogOut size={17} /> {t.logout}</button>
       </div>
+      <section className="card">
+        <h2>Profile</h2>
+        <div className="assignment-grid">
+          <div className="assignment-item">
+            <strong>{profile?.profile?.name || currentUser?.displayName || "Authenticated user"}</strong>
+            <p>{profile?.profile?.headline || "Firebase-authenticated portfolio user"}</p>
+            <small>{profile?.user?.email || currentUser?.email}</small>
+          </div>
+          <div className="assignment-item">
+            <strong>Shared auth</strong>
+            <p>Both backend services verify the same Firebase ID token.</p>
+          </div>
+        </div>
+      </section>
+      <section className="card">
+        <h2>Projects</h2>
+        <div className="assignment-grid">
+          {projects.map((project) => (
+            <div className="assignment-item" key={project.id || project.title}>
+              <strong>{project.title}</strong>
+              <p>{project.description}</p>
+              <small>{(project.stack || []).join(" / ")}</small>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="card">
+        <h2>Products</h2>
+        <div className="assignment-grid">
+          {!products.length && <p>No products loaded yet.</p>}
+          {products.map((product) => (
+            <div className="assignment-item" key={product._id}>
+              <strong>{product.title}</strong>
+              <p>{product.description || "Product from order-service MongoDB catalog."}</p>
+              <small>{Number(product.price || 0).toLocaleString()} KZT</small>
+              <button type="button" onClick={() => createOrder(product)} disabled={!currentUser}>
+                Create order
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="card">
+        <h2>My Orders</h2>
+        <p className="muted-note">Loaded through portfolio-service, which calls order-service inside Docker.</p>
+        <div className="assignment-grid">
+          {!orders.length && <p>No orders yet.</p>}
+          {orders.map((order) => (
+            <div className="assignment-item" key={order._id || order.id}>
+              <strong>{order.status}</strong>
+              <p>{(order.items || []).map((item) => item.product?.title || item.product || "Product").join(", ")}</p>
+              <small>{new Date(order.createdAt).toLocaleString()}</small>
+            </div>
+          ))}
+        </div>
+      </section>
       <section className="card">
         <h2>{t.sendMessage}</h2>
         <form onSubmit={submitMessage}>
